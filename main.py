@@ -6,14 +6,19 @@ de orcamento de potencia optica em redes GPON (ITU-T G.984.x).
 """
 
 import sys
+import customtkinter as ctk
 
 
 def main() -> None:
     """Inicializa e executa a interface grafica da calculadora."""
-    print("Calculadora de Link Budget GPON")
-    print("Versao: 1.0.0")
-    print("Inicializando...")
-    # A GUI sera integrada nas issues subsequentes (ISSUE-007 em diante)
+    ctk.set_appearance_mode("system")
+    ctk.set_default_color_theme("blue")
+
+    # Importacao tardia para evitar loops de importacao
+    from src.views.tela_principal import TelaPrincipal
+
+    app = TelaPrincipal()
+    app.mainloop()
 
 
 if __name__ == "__main__":
