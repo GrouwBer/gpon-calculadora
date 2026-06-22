@@ -1,5 +1,6 @@
 """Janela principal da Calculadora de Link Budget GPON."""
 import customtkinter as ctk
+from typing import Optional
 from src.views.painel_equipamentos import PainelEquipamentos
 from src.views.painel_fibra import PainelFibra
 from src.views.painel_componentes import PainelComponentes
@@ -7,15 +8,75 @@ from src.views.painel_seguranca import PainelSeguranca
 from src.views.painel_resultado import PainelResultado
 
 class TelaPrincipal(ctk.CTk):
-    def __init__(self):
+    def __init__(self, presenter=None):
         super().__init__()
         self.title("Calculadora de Link Budget GPON")
         self.geometry("900x700")
         self.minsize(800, 600)
+        self.presenter = presenter
         self._criar_layout()
+        if presenter:
+            self._conectar_presenter()
+
+    def set_presenter(self, presenter):
+        self.presenter = presenter
+        self._conectar_presenter()
+
+    def _conectar_presenter(self):
+        self.btn_calcular.configure(command=self.presenter.on_calcular)
+        self.btn_limpar.configure(command=self.presenter.on_limpar)
+        self.btn_demo.configure(command=self.presenter.on_demonstracao)
+        self.bind("<Return>", lambda e: self.presenter.on_calcular())
+        self.bind("<Escape>", lambda e: self.presenter.on_limpar())
+
+        # ISSUE-009: Alertas inline via focusout
+        self._vincular_focusout()
+
+    def _vincular_focusout(self):
+        entries = [
+            ("ptx", self.painel_equip.ptx_entry),
+            ("s", self.painel_equip.s_entry),
+            ("distancia", self.painel_fibra.distancia_entry),
+            ("margem", self.painel_seguranca.margem_entry),
+            ("conectores_qtd", self.painel_componentes.con_qtd_entry),
+            ("perda_conector", self.painel_componentes.con_perda_entry),
+            ("fusoes_qtd", self.painel_componentes.fus_qtd_entry),
+            ("perda_fusao", self.painel_componentes.fus_perda_entry),
+        ]
+        for nome, entry in entries:
+            entry.bind("<FocusOut>", lambda e, n=nome: self._validar_campo_ao_sair(n))
+
+    def _validar_campo_ao_sair(self, nome: str):
+        if not self.presenter:
+            return
+        campos = self.presenter._coletar_campos()
+        alertas = self.presenter.controller.validador.validar_campos(campos)
+        alertas_campo = [a for a in alertas if a.campo == nome]
+        self._destacar_campo(nome, alertas_campo)
+
+    def _destacar_campo(self, nome: str, alertas: list):
+        """Altera cor da borda conforme severidade dos alertas."""
+        entry_map = {
+            "ptx": self.painel_equip.ptx_entry,
+            "s": self.painel_equip.s_entry,
+            "distancia": self.painel_fibra.distancia_entry,
+            "margem": self.painel_seguranca.margem_entry,
+            "conectores_qtd": self.painel_componentes.con_qtd_entry,
+            "perda_conector": self.painel_componentes.con_perda_entry,
+            "fusoes_qtd": self.painel_componentes.fus_qtd_entry,
+            "perda_fusao": self.painel_componentes.fus_perda_entry,
+        }
+        entry = entry_map.get(nome)
+        if not entry:
+            return
+        if any(a.nivel == "error" for a in alertas):
+            entry.configure(border_color="red")
+        elif any(a.nivel == "warning" for a in alertas):
+            entry.configure(border_color="orange")
+        else:
+            entry.configure(border_color="gray")
 
     def _criar_layout(self):
-        # Frame esquerdo (parametros)
         self.frame_esq = ctk.CTkScrollableFrame(self, width=420)
         self.frame_esq.pack(side="left", fill="both", expand=True, padx=5, pady=5)
 
@@ -31,33 +92,20 @@ class TelaPrincipal(ctk.CTk):
         self.painel_seguranca = PainelSeguranca(self.frame_esq)
         self.painel_seguranca.pack(fill="x", padx=5, pady=5)
 
-        # Botoes
         self.frame_botoes = ctk.CTkFrame(self.frame_esq)
         self.frame_botoes.pack(fill="x", padx=5, pady=5)
 
-        self.btn_limpar = ctk.CTkButton(self.frame_botoes, text="Limpar", command=self._limpar, fg_color="gray")
+        self.btn_limpar = ctk.CTkButton(self.frame_botoes, text="Limpar", fg_color="gray")
         self.btn_limpar.pack(side="left", padx=5, expand=True, fill="x")
 
-        self.btn_calcular = ctk.CTkButton(self.frame_botoes, text="Calcular", command=self._calcular)
+        self.btn_calcular = ctk.CTkButton(self.frame_botoes, text="Calcular")
         self.btn_calcular.pack(side="left", padx=5, expand=True, fill="x")
 
-        self.btn_demo = ctk.CTkButton(self.frame_botoes, text="Demonstracao", command=self._demonstracao, fg_color="green")
+        self.btn_demo = ctk.CTkButton(self.frame_botoes, text="Demonstracao", fg_color="green")
         self.btn_demo.pack(side="left", padx=5, expand=True, fill="x")
 
-        # Frame direito (resultado)
         self.painel_resultado = PainelResultado(self)
         self.painel_resultado.pack(side="right", fill="both", expand=True, padx=5, pady=5)
-
-        # Atalhos
-        self.bind("<Return>", lambda e: self._calcular())
-        self.bind("<Escape>", lambda e: self._limpar())
-
-    # Placeholder methods (serao conectados ao Presenter na ISSUE-008)
-    def _calcular(self):
-        self.painel_resultado.text_area.configure(state="normal")
-        self.painel_resultado.text_area.delete("1.0", "end")
-        self.painel_resultado.text_area.insert("end", "Presenter nao conectado ainda (ISSUE-008).\n")
-        self.painel_resultado.text_area.configure(state="disabled")
 
     def _limpar(self):
         self.painel_equip.limpar()
