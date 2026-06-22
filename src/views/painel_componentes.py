@@ -57,8 +57,8 @@ class PainelComponentes(ctk.CTkFrame):
         return {
             "splitter_razao": self.splitter1_combo.get().split(":")[1],
             "splitter_excesso": self.splitter1_exc_entry.get(),
-            "splitter2_razao": self.splitter2_combo.get().split(":")[1] if self.splitter2_check.get() else "",
-            "splitter2_excesso": self.splitter2_exc_entry.get() if self.splitter2_check.get() else "",
+            "splitter2_razao": int(self.splitter2_combo.get().split(":")[1]) if self.splitter2_check.get() else None,
+            "splitter2_excesso": float(self.splitter2_exc_entry.get()) if self.splitter2_check.get() else None,
             "conectores_qtd": self.con_qtd_entry.get(),
             "perda_conector": self.con_perda_entry.get(),
             "fusoes_qtd": self.fus_qtd_entry.get(),

@@ -58,10 +58,14 @@ class TelaPrincipal(ctk.CTk):
     def _validar_campo_ao_sair(self, nome: str):
         if not self.presenter:
             return
-        campos = self.presenter._coletar_campos()
-        alertas = self.presenter.controller.validador.validar_campos(campos)
-        alertas_campo = [a for a in alertas if a.campo == nome]
-        self._destacar_campo(nome, alertas_campo)
+        try:
+            campos_raw = self.presenter._coletar_campos()
+            campos_sanitizados = self.presenter.controller._converter_campos(campos_raw)
+            alertas = self.presenter.controller.validador.validar_campos(campos_sanitizados)
+            alertas_campo = [a for a in alertas if a.campo == nome]
+            self._destacar_campo(nome, alertas_campo)
+        except Exception:
+            pass  # Silenciosamente ignora erros de validacao inline
 
     def _destacar_campo(self, nome: str, alertas: list):
         entry_map = {

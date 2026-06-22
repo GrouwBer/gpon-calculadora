@@ -17,7 +17,9 @@ def _arredondar_splitter(N: float) -> int:
 
 
 def resolver(campos: dict, sentido: str = "downstream") -> dict:
-    vazios = [k for k, v in campos.items() if v is None]
+    # Ignorar splitter2 opcionais na contagem de vazios
+    campos_essenciais = {k: v for k, v in campos.items() if k not in ("splitter2_razao", "splitter2_excesso")}
+    vazios = [k for k, v in campos_essenciais.items() if v is None]
     if len(vazios) > 1:
         raise DadosInsuficientesError(vazios)
     if len(vazios) == 0:
