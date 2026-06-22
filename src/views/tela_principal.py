@@ -1,11 +1,11 @@
 """Janela principal da Calculadora de Link Budget GPON."""
 import customtkinter as ctk
-from typing import Optional
 from src.views.painel_equipamentos import PainelEquipamentos
 from src.views.painel_fibra import PainelFibra
 from src.views.painel_componentes import PainelComponentes
 from src.views.painel_seguranca import PainelSeguranca
 from src.views.painel_resultado import PainelResultado
+
 
 class TelaPrincipal(ctk.CTk):
     def __init__(self, presenter=None):
@@ -28,6 +28,16 @@ class TelaPrincipal(ctk.CTk):
         self.btn_demo.configure(command=self.presenter.on_demonstracao)
         self.bind("<Return>", lambda e: self.presenter.on_calcular())
         self.bind("<Escape>", lambda e: self.presenter.on_limpar())
+
+        # ISSUE-010: Classe dropdown
+        self.painel_equip.classe_combo.configure(
+            command=self.presenter.on_classe_selecionada)
+
+        # ISSUE-010: Sentido radio buttons
+        for child in self.painel_fibra.sentido_frame.winfo_children():
+            if isinstance(child, ctk.CTkRadioButton):
+                child.configure(command=lambda: self.presenter.on_sentido_alterado(
+                    self.painel_fibra.sentido_var.get()))
 
         # ISSUE-009: Alertas inline via focusout
         self._vincular_focusout()
@@ -55,7 +65,6 @@ class TelaPrincipal(ctk.CTk):
         self._destacar_campo(nome, alertas_campo)
 
     def _destacar_campo(self, nome: str, alertas: list):
-        """Altera cor da borda conforme severidade dos alertas."""
         entry_map = {
             "ptx": self.painel_equip.ptx_entry,
             "s": self.painel_equip.s_entry,
@@ -122,8 +131,13 @@ class TelaPrincipal(ctk.CTk):
         self.painel_fibra.set_valor("distancia", "12.0")
         self.painel_fibra.set_valor("atenuacao_fibra", "0.25")
         self.painel_componentes.splitter1_combo.set("1:32")
-        self.painel_componentes.con_qtd_entry.delete(0, "end"); self.painel_componentes.con_qtd_entry.insert(0, "4")
-        self.painel_componentes.con_perda_entry.delete(0, "end"); self.painel_componentes.con_perda_entry.insert(0, "0.3")
-        self.painel_componentes.fus_qtd_entry.delete(0, "end"); self.painel_componentes.fus_qtd_entry.insert(0, "3")
-        self.painel_componentes.fus_perda_entry.delete(0, "end"); self.painel_componentes.fus_perda_entry.insert(0, "0.05")
-        self.painel_seguranca.margem_entry.delete(0, "end"); self.painel_seguranca.margem_entry.insert(0, "3.0")
+        self.painel_componentes.con_qtd_entry.delete(0, "end")
+        self.painel_componentes.con_qtd_entry.insert(0, "4")
+        self.painel_componentes.con_perda_entry.delete(0, "end")
+        self.painel_componentes.con_perda_entry.insert(0, "0.3")
+        self.painel_componentes.fus_qtd_entry.delete(0, "end")
+        self.painel_componentes.fus_qtd_entry.insert(0, "3")
+        self.painel_componentes.fus_perda_entry.delete(0, "end")
+        self.painel_componentes.fus_perda_entry.insert(0, "0.05")
+        self.painel_seguranca.margem_entry.delete(0, "end")
+        self.painel_seguranca.margem_entry.insert(0, "3.0")
