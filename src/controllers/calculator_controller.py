@@ -18,6 +18,8 @@ class CalculatorController:
     def sanitizar(self, valor: str) -> Optional[float]:
         if valor is None:
             return None
+        if isinstance(valor, (int, float)):
+            return float(valor)
         v = str(valor).strip()
         if v == "":
             return None
@@ -28,6 +30,10 @@ class CalculatorController:
             raise ValueError(f"Valor invalido: '{valor}' nao e um numero valido.")
 
     def sanitizar_int(self, valor: str) -> Optional[int]:
+        if valor is None:
+            return None
+        if isinstance(valor, int):
+            return valor
         v = self.sanitizar(valor)
         if v is None:
             return None
@@ -87,9 +93,10 @@ class CalculatorController:
         except ValueError as e:
             return {"sucesso": False, "erro": str(e)}
 
-        # Verificar quantos campos estao vazios
-        vazios = sum(1 for v in campos.values() if v is None)
-        campos_calc = {k: v for k, v in campos.items() if k != "classe"}
+        # Verificar quantos campos estao vazios (ignorar splitter2 opcionais)
+        campos_essenciais = {k: v for k, v in campos.items() if k not in ("classe", "splitter2_razao", "splitter2_excesso")}
+        vazios = sum(1 for v in campos_essenciais.values() if v is None)
+        campos_calc = {k: v for k, v in campos_essenciais.items()}
 
         try:
             if vazios == 0:
