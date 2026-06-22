@@ -1,0 +1,6 @@
+sympy>=1.12
+scipy>=1.11
+pytest>=7.4
+pytest-cov>=4.1
+customtkinter>=5.2
+fpdf2>=2.7
