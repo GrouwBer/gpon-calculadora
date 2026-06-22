@@ -26,20 +26,19 @@ class TelaPrincipal(ctk.CTk):
         self.btn_calcular.configure(command=self.presenter.on_calcular)
         self.btn_limpar.configure(command=self.presenter.on_limpar)
         self.btn_demo.configure(command=self.presenter.on_demonstracao)
+        self.btn_exportar_txt.configure(command=self.presenter.on_exportar_txt)
+        self.btn_exportar_pdf.configure(command=self.presenter.on_exportar_pdf)
         self.bind("<Return>", lambda e: self.presenter.on_calcular())
         self.bind("<Escape>", lambda e: self.presenter.on_limpar())
 
-        # ISSUE-010: Classe dropdown
         self.painel_equip.classe_combo.configure(
             command=self.presenter.on_classe_selecionada)
 
-        # ISSUE-010: Sentido radio buttons
         for child in self.painel_fibra.sentido_frame.winfo_children():
             if isinstance(child, ctk.CTkRadioButton):
                 child.configure(command=lambda: self.presenter.on_sentido_alterado(
                     self.painel_fibra.sentido_var.get()))
 
-        # ISSUE-009: Alertas inline via focusout
         self._vincular_focusout()
 
     def _vincular_focusout(self):
@@ -112,6 +111,16 @@ class TelaPrincipal(ctk.CTk):
 
         self.btn_demo = ctk.CTkButton(self.frame_botoes, text="Demonstracao", fg_color="green")
         self.btn_demo.pack(side="left", padx=5, expand=True, fill="x")
+
+        # Export buttons
+        self.frame_export = ctk.CTkFrame(self.frame_esq)
+        self.frame_export.pack(fill="x", padx=5, pady=5)
+
+        self.btn_exportar_txt = ctk.CTkButton(self.frame_export, text="Exportar TXT", fg_color="darkblue")
+        self.btn_exportar_txt.pack(side="left", padx=5, expand=True, fill="x")
+
+        self.btn_exportar_pdf = ctk.CTkButton(self.frame_export, text="Exportar PDF", fg_color="darkblue")
+        self.btn_exportar_pdf.pack(side="left", padx=5, expand=True, fill="x")
 
         self.painel_resultado = PainelResultado(self)
         self.painel_resultado.pack(side="right", fill="both", expand=True, padx=5, pady=5)
