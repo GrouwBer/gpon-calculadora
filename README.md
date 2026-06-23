@@ -18,11 +18,6 @@ Ferramenta desktop para **cálculo, validação e simulação** de orçamento de
 - **Modo demonstração**: cenário típico pré-preenchido para exploração
 - **Exportação**: resultados em TXT e PDF
 
-## Captura de Tela
-
-![GUI](docs/screenshot.png)
-*Nota: substitua por uma captura real da aplicação.*
-
 ## Arquitetura
 
 O projeto segue o padrão **MVP (Model-View-Presenter)**:
