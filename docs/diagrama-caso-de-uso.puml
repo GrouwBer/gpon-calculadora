@@ -1,43 +1,31 @@
-@startuml DiagramaCasoDeUso
-!theme plain
+@startuml
 left to right direction
 skinparam packageStyle rectangle
 
 title Diagrama de Caso de Uso — Calculadora de Link Budget GPON
 
-actor "Projetista de Rede" as Projetista
-actor "Aluno de Engenharia" as Aluno
-actor "Professor" as Professor
+actor "Usuário (Projetista)" as Usuario
 
-rectangle "Calculadora GPON" {
+rectangle "Sistema" {
   usecase "Inserir Parâmetros\ndo Enlace" as UC01
   usecase "Calcular Variável\nFaltante" as UC02
   usecase "Selecionar Classe\nde Potência" as UC03
-  usecase "Alternar Sentido\n(Down/Up)" as UC04
-  usecase "Visualizar\nBreakdown" as UC05
-  usecase "Visualizar Alertas\nde Validação" as UC06
-  usecase "Exportar Resultado\n(TXT / PDF)" as UC07
-  usecase "Modo de\nDemonstração" as UC08
+  usecase "Alternar Sentido\n(Downstream / Upstream)" as UC04
+  usecase "Exportar Resultado\n(TXT / PDF)" as UC05
+  usecase "Visualizar Breakdown\ne Veredito" as UC06
+  usecase "Modo Demonstração" as UC07
   
+  UC06 ..> UC02 : <<extend>>
   UC05 ..> UC02 : <<extend>>
-  UC06 ..> UC01 : <<extend>>
-  UC07 ..> UC02 : <<extend>>
-  UC08 ..> UC01 : <<extend>>
-  UC08 ..> UC03 : <<extend>>
+  UC07 ..> UC01 : <<extend>>
+  UC07 ..> UC03 : <<extend>>
 }
 
-Projetista --> UC01
-Projetista --> UC02
-Projetista --> UC03
-Projetista --> UC04
-Projetista --> UC07
-
-Aluno --> UC01
-Aluno --> UC02
-Aluno --> UC05
-Aluno --> UC08
-
-Professor --> UC05
-Professor --> UC08
+Usuario --> UC01
+Usuario --> UC02
+Usuario --> UC03
+Usuario --> UC04
+Usuario --> UC05
+Usuario --> UC07
 
 @enduml

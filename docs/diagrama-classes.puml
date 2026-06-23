@@ -1,234 +1,114 @@
-@startuml DiagramaClasses
-!theme plain
+@startuml
 skinparam classAttributeIconSize 0
 skinparam packageStyle rectangle
 
-title Diagrama de Classes — Calculadora de Link Budget GPON\n(Atualizado conforme código-fonte final — Arquitetura MVP)
+title Diagrama de Classes — Calculadora de Link Budget GPON
 
-package "Model (Domínio)" #LightBlue {
-  class LinkBudget {
-    + equipamento: Equipamento
-    + fibra: Fibra
-    + splitters: list[Splitter]
-    + conectores_qtd: int
-    + perda_conector: float
-    + fusoes_qtd: int
-    + perda_fusao: float
-    + margem: float
-    + sentido: str
-    --
-    + comprimento_onda: int {property}
-    + ptx: float {property}
-    + sensibilidade: float {property}
-    + atenuacao_fibra_coeficiente: float {property}
-    --
-    + calcular_perda_distancia(): float
-    + calcular_perda_splitters(): float
-    + calcular_perda_conectores(): float
-    + calcular_perda_fusoes(): float
-    + calcular_atenuacao_total(): float
-    + calcular_potencia_recebida(): float
-    + veredito(): dict
-    + breakdown(): dict
-  }
-
-  class Equipamento <<dataclass>> {
-    + ptx_down: float
-    + ptx_up: float
-    + s_down: float
-    + s_up: float
-    + classe: Optional[str]
-    --
-    + {static} from_classe(nome: str): Equipamento
-  }
-
-  class Fibra <<dataclass>> {
-    + distancia: Optional[float]
-    + atenuacao_1310: float
-    + atenuacao_1490: float
-    --
-    + atenuacao_para(comprimento_onda: int): float
-  }
-
-  class Splitter <<dataclass>> {
-    + razao: int
-    + excesso_perda: float
-    --
-    + perda_teorica: float {property}
-    + perda_total: float {property}
-  }
-
-  class Validador {
-    - {static} LIMITES: dict
-    - {static} TIPICOS: dict
-    --
-    + validar_ptx(valor): list[Alerta]
-    + validar_s(valor): list[Alerta]
-    + validar_distancia(valor): list[Alerta]
-    + validar_margem(valor): list[Alerta]
-    + validar_conectores(qtd, perda): list[Alerta]
-    + validar_fusoes(qtd, perda): list[Alerta]
-    + validar_atenuacao_total(a_total, classe): list[Alerta]
-    + validar_campos(campos, classe): list[Alerta]
-    - _fora_tipico(campo, valor): bool
-  }
-
-  class Alerta <<dataclass>> {
-    + campo: str
-    + nivel: TipoSeveridade
-    + mensagem: str
-    + valor_referencia: Optional[float]
-    --
-    + icone: str {property}
-  }
-
-  enum TipoSeveridade {
-    info
-    warning
-    error
-  }
-
-  class "constantes (módulo)" as Constantes {
-    + GPON_CLASSES_DEFAULT
-    + CLASSES_VALIDAS
-    + FIBER_ATTENUATION
-    + SPLITTER_LOSS_TABLE
-    + SPLITTER_RATIOS_VALIDAS
-    + PERDA_CONECTOR_PADRAO
-    + PERDA_FUSAO_PADRAO
-    + MARGEM_PADRAO
-    + COMPRIMENTOS_ONDA
-    + GPON_LIMITS
-  }
-
-  class "resolver() [função]" as SolverFunc <<function>> {
-    + resolver(campos: dict, sentido: str): dict
-    - _arredondar_splitter(N: float): int
-  }
-
-  DadosInsuficientesError --|> ValueError
-  NenhumaIncognitaError --|> ValueError
-  ValorFisicamenteImpossivelError --|> ValueError
+class LinkBudget {
+  + equipamento: Equipamento
+  + fibra: Fibra
+  + splitters: list[Splitter]
+  + conectores_qtd: int
+  + perda_conector: float
+  + fusoes_qtd: int
+  + perda_fusao: float
+  + margem: float
+  + sentido: str
+  --
+  + calcular_perda_distancia(): float
+  + calcular_perda_splitters(): float
+  + calcular_perda_conectores(): float
+  + calcular_perda_fusoes(): float
+  + calcular_atenuacao_total(): float
+  + calcular_potencia_recebida(): float
+  + veredito(): dict
+  + breakdown(): dict
 }
 
-package "Controller (Orquestração)" #LightGreen {
-  class CalculatorController {
-    + validador: Validador
-    + ultimo_resultado: Optional[dict]
-    --
-    + sanitizar(valor): Optional[float]
-    + sanitizar_int(valor): Optional[int]
-    + calcular(campos_raw, sentido, classe): dict
-    - _construir_link_budget(...): tuple
-    - _montar_resultado(...): dict
-    - _converter_campos(raw): dict
-  }
-
-  class CalculatorPresenter {
-    + view: TelaPrincipal
-    + controller: CalculatorController
-    + exportador: Exportador
-    + ultimo_resultado: Optional[dict]
-    --
-    + on_calcular(): None
-    + on_limpar(): None
-    + on_demonstracao(): None
-    + on_classe_selecionada(nome): None
-    + on_sentido_alterado(sentido): None
-    + on_exportar_txt(): None
-    + on_exportar_pdf(): None
-    - _coletar_campos(): dict
-  }
-
-  class Exportador {
-    + exportar_txt(resultado, filepath): None
-    + exportar_pdf(resultado, filepath): None
-  }
+class Equipamento {
+  + ptx_down: float
+  + ptx_up: float
+  + s_down: float
+  + s_up: float
+  + classe: str
+  --
+  + {static} from_classe(nome: str): Equipamento
 }
 
-package "View (Interface Gráfica)" #LightYellow {
-  class TelaPrincipal <<ctk.CTk>> {
-    + presenter: CalculatorPresenter
-    + painel_equip: PainelEquipamentos
-    + painel_fibra: PainelFibra
-    + painel_componentes: PainelComponentes
-    + painel_seguranca: PainelSeguranca
-    + painel_resultado: PainelResultado
-    --
-    + set_presenter(presenter): None
-    - _conectar_presenter(): None
-    - _criar_layout(): None
-    - _limpar(): None
-    - _demonstracao(): None
-  }
-
-  class PainelEquipamentos <<ctk.CTkFrame>> {
-    + classe_var, classe_combo
-    + ptx_entry, s_entry
-    --
-    + get_valores(): dict
-    + set_valor(campo, valor): None
-    + limpar(): None
-  }
-
-  class PainelFibra <<ctk.CTkFrame>> {
-    + sentido_var, distancia_entry
-    + atenuacao_entry
-    --
-    + get_valores(): dict
-    + set_valor(campo, valor): None
-    + limpar(): None
-  }
-
-  class PainelComponentes <<ctk.CTkFrame>> {
-    + splitter1_combo, splitter2_combo
-    + con_qtd_entry, fus_qtd_entry
-    --
-    + get_valores(): dict
-    + limpar(): None
-  }
-
-  class PainelSeguranca <<ctk.CTkFrame>> {
-    + margem_entry
-    --
-    + get_valores(): dict
-    + limpar(): None
-  }
-
-  class PainelResultado <<ctk.CTkScrollableFrame>> {
-    + text_area: CTkTextbox
-    --
-    + exibir_resultado(resultado): None
-    + limpar(): None
-  }
+class Fibra {
+  + distancia: float
+  + atenuacao_1310: float
+  + atenuacao_1490: float
+  --
+  + atenuacao_para(compr_onda: int): float
 }
 
-' Relacionamentos Model
-LinkBudget *-- Equipamento
-LinkBudget *-- Fibra
-LinkBudget o-- Splitter
-LinkBudget ..> Constantes : usa
+class Splitter {
+  + razao: int
+  + excesso_perda: float
+  --
+  + perda_teorica: float {property}
+  + perda_total: float {property}
+}
+
+class Validador {
+  - LIMITES: dict {static}
+  - TIPICOS: dict {static}
+  --
+  + validar_ptx(valor): list[Alerta]
+  + validar_s(valor): list[Alerta]
+  + validar_distancia(valor): list[Alerta]
+  + validar_margem(valor): list[Alerta]
+  + validar_conectores(qtd, perda): list[Alerta]
+  + validar_fusoes(qtd, perda): list[Alerta]
+  + validar_atenuacao_total(a_total, classe): list[Alerta]
+  + validar_campos(campos, classe): list[Alerta]
+}
+
+class Alerta {
+  + campo: str
+  + nivel: str
+  + mensagem: str
+  + valor_referencia: float
+}
+
+class CalculatorController {
+  + validador: Validador
+  --
+  + sanitizar(valor): float
+  + calcular(campos, sentido, classe): dict
+  - _converter_campos(raw): dict
+}
+
+class CalculatorPresenter {
+  + view: TelaPrincipal
+  + controller: CalculatorController
+  --
+  + on_calcular(): void
+  + on_limpar(): void
+  + on_demonstracao(): void
+  + on_classe_selecionada(nome): void
+  + on_sentido_alterado(sentido): void
+}
+
+class TelaPrincipal {
+  + painel_equip: PainelEquipamentos
+  + painel_fibra: PainelFibra
+  + painel_componentes: PainelComponentes
+  + painel_resultado: PainelResultado
+}
+
+' ===== Relacionamentos =====
+LinkBudget "1" *-- "1" Equipamento
+LinkBudget "1" *-- "1" Fibra
+LinkBudget "1" o-- "0..2" Splitter
+
 Validador ..> Alerta : produz
-Alerta --> TipoSeveridade
-Equipamento ..> Constantes : usa
-Splitter ..> Constantes : usa
-Fibra ..> Constantes : usa
-SolverFunc ..> LinkBudget : constrói
-SolverFunc ..> Constantes : usa
 
-' Relacionamentos Controller
 CalculatorController --> Validador : usa
 CalculatorController ..> LinkBudget : constrói
-CalculatorController ..> SolverFunc : chama
-CalculatorPresenter --> CalculatorController : delega
-CalculatorPresenter --> Exportador : usa
-CalculatorPresenter ..> TelaPrincipal : atualiza
 
-' Relacionamentos View
-TelaPrincipal *-- PainelEquipamentos
-TelaPrincipal *-- PainelFibra
-TelaPrincipal *-- PainelComponentes
-TelaPrincipal *-- PainelSeguranca
-TelaPrincipal *-- PainelResultado
+CalculatorPresenter --> CalculatorController : delega
+CalculatorPresenter --> TelaPrincipal : atualiza
 
 @enduml
