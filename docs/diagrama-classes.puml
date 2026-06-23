@@ -1,0 +1,114 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+title Diagrama de Classes — Calculadora de Link Budget GPON
+
+class LinkBudget {
+  + equipamento: Equipamento
+  + fibra: Fibra
+  + splitters: list[Splitter]
+  + conectores_qtd: int
+  + perda_conector: float
+  + fusoes_qtd: int
+  + perda_fusao: float
+  + margem: float
+  + sentido: str
+  --
+  + calcular_perda_distancia(): float
+  + calcular_perda_splitters(): float
+  + calcular_perda_conectores(): float
+  + calcular_perda_fusoes(): float
+  + calcular_atenuacao_total(): float
+  + calcular_potencia_recebida(): float
+  + veredito(): dict
+  + breakdown(): dict
+}
+
+class Equipamento {
+  + ptx_down: float
+  + ptx_up: float
+  + s_down: float
+  + s_up: float
+  + classe: str
+  --
+  + {static} from_classe(nome: str): Equipamento
+}
+
+class Fibra {
+  + distancia: float
+  + atenuacao_1310: float
+  + atenuacao_1490: float
+  --
+  + atenuacao_para(compr_onda: int): float
+}
+
+class Splitter {
+  + razao: int
+  + excesso_perda: float
+  --
+  + perda_teorica: float {property}
+  + perda_total: float {property}
+}
+
+class Validador {
+  - LIMITES: dict {static}
+  - TIPICOS: dict {static}
+  --
+  + validar_ptx(valor): list[Alerta]
+  + validar_s(valor): list[Alerta]
+  + validar_distancia(valor): list[Alerta]
+  + validar_margem(valor): list[Alerta]
+  + validar_conectores(qtd, perda): list[Alerta]
+  + validar_fusoes(qtd, perda): list[Alerta]
+  + validar_atenuacao_total(a_total, classe): list[Alerta]
+  + validar_campos(campos, classe): list[Alerta]
+}
+
+class Alerta {
+  + campo: str
+  + nivel: str
+  + mensagem: str
+  + valor_referencia: float
+}
+
+class CalculatorController {
+  + validador: Validador
+  --
+  + sanitizar(valor): float
+  + calcular(campos, sentido, classe): dict
+  - _converter_campos(raw): dict
+}
+
+class CalculatorPresenter {
+  + view: TelaPrincipal
+  + controller: CalculatorController
+  --
+  + on_calcular(): void
+  + on_limpar(): void
+  + on_demonstracao(): void
+  + on_classe_selecionada(nome): void
+  + on_sentido_alterado(sentido): void
+}
+
+class TelaPrincipal {
+  + painel_equip: PainelEquipamentos
+  + painel_fibra: PainelFibra
+  + painel_componentes: PainelComponentes
+  + painel_resultado: PainelResultado
+}
+
+' ===== Relacionamentos =====
+LinkBudget "1" *-- "1" Equipamento
+LinkBudget "1" *-- "1" Fibra
+LinkBudget "1" o-- "0..2" Splitter
+
+Validador ..> Alerta : produz
+
+CalculatorController --> Validador : usa
+CalculatorController ..> LinkBudget : constrói
+
+CalculatorPresenter --> CalculatorController : delega
+CalculatorPresenter --> TelaPrincipal : atualiza
+
+@enduml
